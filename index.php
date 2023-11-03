@@ -1,11 +1,11 @@
 <?php
 /**
- * @file index.php (TEFIS)
- * 
+ * @file index.php (HomStoL)
+ *
  * @brief HomStoL - Home Stock List (list with information about items at home)
  * @date 2023-03-03
  * @author F3lda
- * @update 2023-03-12
+ * @update 2023-11-03
  */
 
 //-------------------
@@ -108,7 +108,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
             if (isset($_POST["desc"])) {$data["desc"] = $_POST["desc"];} else {$data["desc"] = "";}
             if (isset($_POST["notes"])) {$data["notes"] = $_POST["notes"];} else {$data["notes"] = "";}
             if (isset($_POST["url"])) {$data["url"] = $_POST["url"];} else {$data["url"] = "";}
-            
+
             $data["id"] = "";
             $data["hash"] = "";
 
@@ -125,14 +125,14 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
             if ($database->lastError() == 'OK') {
 
                 // set item ID and HASH
-                $data = [];            
+                $data = [];
                 $data["id"] = date("Ymd").$result["inserted_id"];
                 $data["hash"] = hash('sha256', ($data["id"].time()));
-    
+
                 $query = "UPDATE HomStoL SET item_id = :id, item_hash = :hash WHERE id = ".$result["inserted_id"];
                 $result = $database->execute($query, $data);
                 if ($database->lastError() == 'OK') {
-                    
+
                     echo "Item: ".$_POST["name"]." - successfully added.<br>";
 
                     // upload images
@@ -140,15 +140,15 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
 
                     $files = array();
                     if (isset($_FILES["imgs"]) && isset($_FILES["imgs"]["name"])) {
-                            
+
                         for ($i = 0; $i < count($_FILES["imgs"]["name"]); $i++) {
-                            
+
                             foreach ($_FILES["imgs"] as $key=>$value) {
                                 $files["img-".($i+1)][$key] = $_FILES["imgs"][$key][$i];
                             }
                         }
                     }
-                    
+
                     foreach ($files as $index => $file) {
                         if (isset($file['error']) || !is_array($file['error'])) {
                             if ($file['error'] == UPLOAD_ERR_OK) {
@@ -192,7 +192,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
 
             echo "<br>";
 
-            
+
             // disconnect from database
             $database->disconnect();
 
@@ -219,7 +219,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
             }
         }
 
-        
+
         // connect to database
         $database = new Database($db_host, $db_name, $db_username, $db_password);
         $database->connect();
@@ -227,10 +227,10 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
 
         // update item info
         if (isset($_POST["submit"])){
-            
+
             unset($_POST["submit"]);
             $_POST["id"] = $_GET["SHOW"];
-            
+
             $query = "UPDATE HomStoL SET item_name = :name, item_description = :desc, item_notes = :notes, item_url = :url, item_state = :state WHERE item_id = :id";
             $result = $database->execute($query, $_POST);
             if ($database->lastError() != 'OK') {
@@ -263,9 +263,9 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
 
         $files = array();
         if (isset($_FILES["imgs"]) && isset($_FILES["imgs"]["name"])) {
-                
+
             for ($i = 0; $i < count($_FILES["imgs"]["name"]); $i++) {
-                
+
                 foreach ($_FILES["imgs"] as $key=>$value) {
                     $files["img-".($i+1)][$key] = $_FILES["imgs"][$key][$i];
                 }
@@ -340,7 +340,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                     $array = @scandir($path);
                     if ($array != false) {
                         $array = array_diff($array, array('.', '..', 'index.php'));
-                        
+
                         foreach($array as $img) {
                             echo "<br>Image: ".$img." - <a onclick='return confirm(\"Do you really want to delete this image <".$img.">?\");' title='remove image' href='./?SHOW=".$_GET["SHOW"]."&remove=".$img."'>x</a><br><img width='640' height='480' src='".$path.$img."'>";
                         }
@@ -388,7 +388,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
         </form>
         <br>
         <?php
-        // print upload messages 
+        // print upload messages
         echo $files_upload_content;
         if ($files_upload_content != "") {
             echo "<br>";
@@ -448,11 +448,10 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
         define('ITEMS_PER_PAGE', 5);
 
 
-
         // sql rows limit
         $data['page_number'] = 1;
         $data['item_count'] = ITEMS_PER_PAGE;
-        
+
         if (isset($_GET['page_number'])) {
             $_GET['page_number'] += 0;
             if (is_int($_GET['page_number']) && $_GET['page_number'] > 0) {
@@ -462,7 +461,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                 die();
             }
         }
-        
+
         if (isset($_GET['item_count'])) {
             $_GET['item_count'] += 0;
             if (is_int($_GET['item_count']) && $_GET['item_count'] > 0) {
@@ -472,9 +471,11 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                 die();
             }
         }
-        
+
         $data['item_limit'] = $data['page_number']*$data['item_count'];
 
+
+		ob_start();
 ?>
 <!DOCTYPE html>
 <html>
@@ -549,7 +550,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                 <li>
                     Sort by:
                     <select id="sort" name="sort" onchange="var searchParams = new URLSearchParams(window.location.search); searchParams.set('sort', this.value); window.location.search = searchParams.toString();">
-                        <option value="created" <?php if(isset($_GET["sort"]) && $_GET["sort"] == "created"){echo "selected";} ?>>creation time</option>    
+                        <option value="created" <?php if(isset($_GET["sort"]) && $_GET["sort"] == "created"){echo "selected";} ?>>creation time</option>
                         <option value="updated" <?php if(isset($_GET["sort"]) && $_GET["sort"] == "updated"){echo "selected";} ?>>last update</option>
                         <option value="state" <?php if(isset($_GET["sort"]) && $_GET["sort"] == "state"){echo "selected";} ?>>state</option>
                     </select>
@@ -571,6 +572,11 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
         </div>
         <?php
 
+		$doc_head = ob_get_contents();
+		ob_end_clean();
+
+
+
         // connect to database
         $database = new Database($db_host, $db_name, $db_username, $db_password);
         $database->connect();
@@ -580,7 +586,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
         if ($database->lastError() != 'OK') {
             // If not, create one
             $result = $database->execute("CREATE TABLE HomStoL (
-                id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+                id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 item_id VARCHAR(48), /* date (yyyymmdd) + id */
                 item_name VARCHAR(255),
                 item_description VARCHAR(1024),
@@ -601,11 +607,12 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                 print_r($result);
             }
         }
-        
-        
+
+
         // SHOW ITEMS
         if ($database->lastError() == 'OK' && $result["row_count"] == 0) {
 
+			echo $doc_head;
             echo "<h3>No items found!</h3>";
 
         } else if ($database->lastError() == 'OK') {
@@ -659,13 +666,9 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
             }
 
 
-            // print pages numbers and links
-            echo $pages_links;
-
-
             // redirect when wrong page
             if ($pages_count < $data['page_number']) {
-                
+
                 // if page number is bigger than number of pages -> go to last page with current item count
                 if (isset($_GET["item_count"])) {
                     header("Location: ./?page_number=".$pages_count."&item_count=".$_GET["item_count"]);
@@ -705,6 +708,18 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
                 $slice_count = ($data['page_number']-1)*$data['item_count'];
                 $result = array_slice($result, $slice_count);
             }
+
+
+
+
+
+			// print document head
+			echo $doc_head;
+
+
+
+			// print pages numbers and links
+            echo $pages_links;
 
 
 
@@ -760,7 +775,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
     if (isset($_POST["login"])) {
         if (!isset($_POST["login"]) || empty($_POST["username"]) || empty($_POST["password"])
         || ($_POST["username"] != $username || $_POST["password"] != $password)) {
-            
+
             // Invalid login
             // redirect
             header('Location: ./', true, 301);
@@ -797,7 +812,7 @@ if (isset($_SESSION['homstol_user_name']) && $_SESSION['homstol_user_name'] != "
             <form method="post" action="./">
                 <fieldset style="display:inline;">
                     <legend><h2 style="margin: 5px;"><a href="https://github.com/F3lda/HomStoL" target="_blank" title="HomStoL by F3lda">HomStoL</a> - Home Stock List</h2></legend>
-                    <div>    
+                    <div>
                         <label>Username: </label>
                         <input type="text" name="username" pattern="[a-zA-Z0-9]+" required /><br>
                     </div>
